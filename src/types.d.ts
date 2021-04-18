@@ -164,7 +164,7 @@ declare global {
 
     interface Response {
       globalObjects: {
-        tweets: Record<string, Tweet>;
+        tweets?: Record<string, Tweet>;
       };
     }
   }

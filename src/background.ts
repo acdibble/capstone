@@ -9,16 +9,17 @@ type ToxicityClassifier = import('@tensorflow-models/toxicity').ToxicityClassifi
 let model: ToxicityClassifier | undefined;
 
 const initialize = async (): Promise<ToxicityClassifier> => {
+  if (model) return model;
   let tox = globalThis.toxicity;
   if (globalThis.XMLHttpRequest) {
-    import('@tensorflow/tfjs-backend-webgl');
     await tf!.setBackend('webgl');
   } else {
     await import('@tensorflow/tfjs-node');
     tox = (await import('@tensorflow-models/toxicity')).default;
   }
   // @ts-expect-error this is an acceptable call
-  return tox.load(0.8);
+  model = await tox.load(0.8);
+  return model;
 };
 
 const classify = async (tweets: string[]): Promise<('positive' | 'negative' | 'neutral')[]> => {
@@ -27,12 +28,22 @@ const classify = async (tweets: string[]): Promise<('positive' | 'negative' | 'n
   }
   const classifications = await model.classify(tweets);
   console.log(classifications);
-  return classifications[classifications.length - 1]!.results.map(({ probabilities }) => {
-    const probability = probabilities[0]!;
+  return classifications[classifications.length - 1].results.map(({ probabilities }) => {
+    const probability = probabilities[0];
     if (probability < (1 / 3)) return 'negative';
-    if (probability < (2 / 3)) return 'neutral';
+    if (probability < (8 / 10)) return 'neutral';
     return 'positive';
   });
 };
 
-void classify(['you suck', "you're cool", 'i want to punch you']).then(console.log);
+if (globalThis.XMLHttpRequest) {
+  console.log('starting message handler');
+  chrome.runtime.onConnect.addListener((port) => {
+    console.log('got connection');
+    port.onMessage.addListener(async ({ id, tweets }: {id: number; tweets: string[]}) => {
+      await initialize();
+      console.log('got message from port', tweets);
+      port.postMessage({ id, classifications: await classify(tweets) });
+    });
+  });
+}
