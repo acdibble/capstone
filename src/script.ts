@@ -1,19 +1,14 @@
 /* eslint-disable func-names */
-/// <reference types="@types/chrome" />
-/// <reference path="types.d.ts" />
-
 // eslint-disable-next-line @typescript-eslint/unbound-method
 const oldOpen = window.XMLHttpRequest.prototype.open;
 
-type Classification = 'positive' | 'negative' | 'neutral'
-
 interface IncomingMessage {
   id: number;
-  classifications: Classification[];
+  classifications: Cleaner.Classification[];
 }
 
 let id = 1;
-const callbackMap: Record<number, (payload: Classification[]) => void> = {};
+const callbackMap: Record<number, (payload: Cleaner.Classification[]) => void> = {};
 const scriptTag = document.getElementById('extension-script-tag')!;
 
 scriptTag.addEventListener('classified', ((message: CustomEvent<IncomingMessage>): void => {
@@ -29,7 +24,7 @@ scriptTag.addEventListener('classified', ((message: CustomEvent<IncomingMessage>
 }) as EventListener);
 
 // TODO: add caching?
-const getClassifications = async (tweets: string[]): Promise<Classification[]> => new Promise((resolve) => {
+const getClassifications = async (tweets: string[]): Promise<Cleaner.Classification[]> => new Promise((resolve) => {
   const messageId = id++;
   callbackMap[messageId] = resolve;
   console.log('dispatching ping message');

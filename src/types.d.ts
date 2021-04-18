@@ -168,6 +168,10 @@ declare global {
       };
     }
   }
+
+  declare namespace Cleaner {
+    type Classification = 'positive' | 'neutral' | 'negative'
+  }
 }
 
 export {};

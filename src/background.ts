@@ -22,7 +22,7 @@ const initialize = async (): Promise<ToxicityClassifier> => {
   return model;
 };
 
-const classify = async (tweets: string[]): Promise<('positive' | 'negative' | 'neutral')[]> => {
+const classify = async (tweets: string[]): Promise<Cleaner.Classification[]> => {
   if (!model) {
     model = await initialize();
   }
@@ -40,7 +40,7 @@ if (globalThis.XMLHttpRequest) {
   console.log('starting message handler');
   chrome.runtime.onConnect.addListener((port) => {
     console.log('got connection');
-    port.onMessage.addListener(async ({ id, tweets }: {id: number; tweets: string[]}) => {
+    port.onMessage.addListener(async ({ id, tweets }: { id: number; tweets: string[] }) => {
       await initialize();
       console.log('got message from port', tweets);
       port.postMessage({ id, classifications: await classify(tweets) });
