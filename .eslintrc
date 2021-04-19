@@ -33,6 +33,8 @@
     }
   },
   "rules": {
+    "no-await-in-loop": "off",
+    "import/no-unresolved": "off",
     "no-console": "off",
     "no-plusplus": "off",
     "import/extensions": [
@@ -56,7 +58,7 @@
       "error",
       {
         "devDependencies": [
-          "src/**/*.test.ts"
+          "model/**/*.ts"
         ]
       }
     ],
