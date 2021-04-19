@@ -37,11 +37,21 @@ export default class Database {
     return this.runAsync`INSERT INTO tweets VALUES (${textID}, ${text}, ${sentiment})`;
   }
 
-  async* [Symbol.asyncIterator](): AsyncGenerator<Tweet> {
+  async query<T>(parts: TemplateStringsArray, ...args: unknown[]): Promise<T> {
+    const sql = parts.join('?');
+    return new Promise((resolve, reject) => {
+      this.db.get(sql, args, (error, result) => (error ? reject(error) : resolve(result)));
+    });
+  }
+
+  async* [Symbol.asyncIterator]({ limit, random }: Partial<{limit: number; random: boolean}>): AsyncGenerator<Tweet> {
     const emitter = new EventEmitter();
 
+    let sql = 'SELECT trim(lower(text)) as text, sentiment FROM tweets';
+    if (random) sql += ' ORDER BY RANDOM()';
+    if (limit) sql += ` LIMIT ${limit}`;
     this.db.each(
-      'SELECT * FROM tweets',
+      sql,
       (error, result) => {
         if (error) {
           emitter.emit('error', error);
@@ -70,5 +80,9 @@ export default class Database {
 
       if (tweet) yield tweet;
     } while (tweet !== null);
+  }
+
+  random(limit = 100): AsyncGenerator<Tweet> {
+    return this[Symbol.asyncIterator]({ limit, random: true });
   }
 }
