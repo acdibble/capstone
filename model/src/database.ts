@@ -2,10 +2,14 @@ import { EventEmitter } from 'events';
 import sqlite3 from 'sqlite3';
 import { getAsset } from './utils.js';
 
+export const sentiments = ['positive', 'neutral', 'negative'] as const;
+
+export type Sentiment = typeof sentiments[number]
+
 interface Tweet {
   textID: string;
   text: string;
-  sentiment: 'positive' | 'neutral' | 'negative';
+  sentiment: Sentiment;
 }
 
 export default class Database {
