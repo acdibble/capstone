@@ -71,5 +71,8 @@ test_loss, test_acc = model.evaluate(encoded_test_dataset)
 print('Test Loss:', test_loss)
 print('Test Accuracy:', test_acc)
 
-tfjs.converters.save_keras_model(
-    model, model_dir / 'assets' / 'trained_model_js')
+assets_dir = model_dir / 'assets'
+model_path = assets_dir / 'trained_model'
+model.save(model_path)
+tfjs.converters.convert_tf_saved_model(
+    model_path, assets_dir / 'trained_model_converted')
