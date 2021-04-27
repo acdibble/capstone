@@ -1,8 +1,8 @@
 import csv
 import os
-import shutil
-import re
 import pathlib
+import re
+import shutil
 
 model_path = pathlib.Path(__file__).parent.parent.absolute()
 assets_dir = model_path / 'assets'
@@ -16,13 +16,22 @@ def mkdir(path):
         pass
 
 
-shutil.rmtree(data_dir)
+try:
+    shutil.rmtree(data_dir)
+except FileNotFoundError:
+    pass
+
 mkdir(data_dir)
 
-for filename in ('train', 'test'):
+mapping = {
+    '0': 'negative',
+    '4': 'positive',
+}
+
+for filename in ['big']:
     counts = {
         'negative': 0,
-        'not_negative': 0,
+        'positive': 0,
     }
 
     output_dir = data_dir / filename
@@ -33,7 +42,7 @@ for filename in ('train', 'test'):
 
     with open(assets_dir / f'{filename}.csv') as csv_file:
         for row in csv.DictReader(csv_file):
-            sentiment = 'negative' if row['sentiment'] == 'negative' else 'not_negative'
+            sentiment = mapping[row['sentiment']]
             count = counts[sentiment]
             text = f'''"{re.sub('"', '""', row['text'].strip())}"'''
             with open(output_dir / sentiment / f'{count}.txt',  'w') as out_file:
