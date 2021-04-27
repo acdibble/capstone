@@ -3,7 +3,8 @@
   "name": "Twitter Cleaner",
   "version": "1.0",
   "permissions": [
-    "activeTab"
+    "activeTab",
+    "storage"
   ],
   "background": {
     "page": "src/background.html"
@@ -20,6 +21,8 @@
     }
   ],
   "web_accessible_resources": [
-    "dist/script.js"
+    "src/*",
+    "dist/*",
+    "assets/*"
   ]
 }

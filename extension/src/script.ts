@@ -4,46 +4,57 @@ const oldOpen = window.XMLHttpRequest.prototype.open;
 
 interface IncomingMessage {
   id: number;
-  classifications: Cleaner.Classification[];
+  classifications: Analyzer.Result[];
 }
 
-let id = 1;
-const callbackMap: Record<number, (payload: Cleaner.Classification[]) => void> = {};
+let messageId = 1;
+type Resolver = (payload: Analyzer.Result[]) => void
+const callbackMap: Record<number, Resolver> = {};
 const scriptTag = document.getElementById('extension-script-tag')!;
 
-scriptTag.addEventListener('classified', ((message: CustomEvent<IncomingMessage>): void => {
+scriptTag.addEventListener('classified', (({ detail }: CustomEvent<IncomingMessage>): void => {
   try {
-    console.log('received classified event');
-    console.log('message', message);
-    callbackMap[message.detail.id]?.(message.detail.classifications);
-    delete callbackMap[message.detail.id];
-  } catch (e) {
-    console.error('error in callback');
-    console.error(e);
+    (callbackMap[detail.id] as Resolver | undefined)?.(detail.classifications);
+    delete callbackMap[detail.id];
+  } catch {
+    //
   }
 }) as EventListener);
 
-// TODO: add caching?
-const getClassifications = async (tweets: string[]): Promise<Cleaner.Classification[]> => new Promise((resolve) => {
-  const messageId = id++;
-  callbackMap[messageId] = resolve;
-  console.log('dispatching ping message');
-  scriptTag.dispatchEvent(new CustomEvent('classify', { detail: { id: messageId, tweets } }));
+const getClassifications = async (tweets: Analyzer.Input[]): Promise<Analyzer.Result[]> => new Promise((resolve) => {
+  const newMessageId = messageId++;
+  callbackMap[newMessageId] = resolve;
+  scriptTag.dispatchEvent(new CustomEvent('classify', { detail: { id: newMessageId, tweets } }));
 });
 
 /* eslint-disable no-param-reassign */
-const filterTweets = async (tweetsObject: Record<string, Twitter.Tweet>): Promise<void> => {
+const filterTweets = async (tweetsObject: Record<string, Twitter.Tweet> | undefined): Promise<boolean> => {
   // console.log(await new Promise((resolve) => chrome.runtime.sendMessage({ message: 'ping' }, resolve)));
+  if (!tweetsObject) return false;
   const tweetIds = Object.keys(tweetsObject);
-  if (tweetIds.length === 0) return;
-  const tweets = tweetIds.map((tweetId) => tweetsObject[tweetId]!.full_text);
-  const classifications = await getClassifications(tweets);
-  for (let i = 0; i < classifications.length; i++) {
-    if (classifications[i] === 'negative') {
-      console.log('found negative tweet', tweets[i]);
-      delete tweetsObject[tweetIds[i]!];
+  if (tweetIds.length === 0) return false;
+  const tweets: Analyzer.Input[] = tweetIds.map((id) => {
+    const {
+      full_text: text,
+      retweet_count: retweet,
+      favorite_count: favorite,
+      reply_count: reply,
+      quote_count: quote,
+    } = tweetsObject[id];
+    return {
+      id,
+      text,
+      totalReach: retweet + favorite + reply + quote,
+    };
+  });
+  let filtered = false;
+  for (const { id, result } of await getClassifications(tweets)) {
+    if (result) {
+      delete tweetsObject[id as string];
+      filtered = true;
     }
   }
+  return filtered;
 };
 /* eslint-enable no-param-reassign */
 
@@ -57,39 +68,32 @@ const createCallback = (opts: CreateCallbackOpts) => async function (this: XMLHt
     if (status >= 200 && status < 300) {
       const responseBody = JSON.parse(this.responseText) as Twitter.Response;
 
-      if ('tweets' in responseBody.globalObjects) {
-        await filterTweets(responseBody.globalObjects.tweets!);
+      if ((await filterTweets(responseBody?.globalObjects?.tweets))) {
+        Object.defineProperty(this, 'responseText', {
+          get() {
+            return JSON.stringify(responseBody);
+          },
+        });
       }
-
-      Object.defineProperty(this, 'responseText', {
-        get() {
-          return JSON.stringify(responseBody);
-        },
-      });
     }
   }
 
   opts.callback?.call(this);
 };
 
-const re = new RegExp(String.raw`/i/api/2/(timeline|notifications)/(profile/)?(home|all|\d+).json`);
-
 window.XMLHttpRequest.prototype.open = function (this: XMLHttpRequest, ...args: Parameters<typeof oldOpen>) {
-  const { pathname } = new URL(args[1]);
-  if (re.test(pathname)) {
-    const opts: CreateCallbackOpts = {};
+  const opts: CreateCallbackOpts = {};
 
-    this.onreadystatechange = createCallback(opts);
+  this.onreadystatechange = createCallback(opts);
 
-    Object.defineProperty(this, 'onreadystatechange', {
-      get() {
-        return opts.callback;
-      },
-      set(value: ((this: XMLHttpRequest) => void)) {
-        opts.callback = value;
-      },
-    });
-  }
+  Object.defineProperty(this, 'onreadystatechange', {
+    get() {
+      return opts.callback;
+    },
+    set(value: ((this: XMLHttpRequest) => void)) {
+      opts.callback = value;
+    },
+  });
 
   return oldOpen.apply(this, args);
 } as typeof oldOpen;

@@ -1,7 +1,11 @@
-/* eslint-disable @typescript-eslint/no-namespace */
 /* eslint-disable camelcase */
 
 declare global {
+  // eslint-disable-next-line vars-on-top, no-var
+  declare var tf: typeof import('@tensorflow/tfjs');
+  // eslint-disable-next-line vars-on-top, no-var
+  declare var use: typeof import('@tensorflow-models/universal-sentence-encoder');
+
   declare namespace Twitter {
 
     interface URL {
@@ -169,8 +173,17 @@ declare global {
     }
   }
 
-  declare namespace Cleaner {
-    type Classification = 'positive' | 'neutral' | 'negative'
+  declare namespace Analyzer {
+    interface Input {
+      id: string;
+      text: string;
+      totalReach: number;
+    }
+
+    interface Result {
+      id: string;
+      result: boolean;
+    }
   }
 }
 
