@@ -1,9 +1,9 @@
 /* eslint-disable lines-between-class-members */
-type Callback<T> = (value: T) => void
+type Callback<T> = (this: Observable<T>, value: T) => void
 
 export default class Observable<T> {
   #value: T
-  callbacks: Callback<T>[] = []
+  callbacks = new Map<symbol, Callback<T>>()
 
   constructor(value: T) {
     this.#value = value;
@@ -13,9 +13,16 @@ export default class Observable<T> {
     return this.#value;
   }
 
-  watch(cb: Callback<T>): void {
-    this.callbacks.push(cb);
-    cb(this.value);
+  watch(cb: Callback<T>): () => void {
+    // eslint-disable-next-line symbol-description
+    const id = Symbol();
+    this.callbacks.set(id, cb);
+    cb.call(this, this.value);
+    return () => this.unwatch(id);
+  }
+
+  private unwatch(id: symbol): void {
+    this.callbacks.delete(id);
   }
 
   update(callback: (value: T) => T): void
@@ -29,7 +36,7 @@ export default class Observable<T> {
       throw new TypeError();
     }
     this.callbacks.forEach((cb) => {
-      cb(this.#value);
+      cb.call(this, this.#value);
     });
   }
 }

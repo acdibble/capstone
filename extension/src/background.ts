@@ -1,10 +1,11 @@
 import Analyzer from './Analyzer.js';
 import { entries } from './utils.js';
 import Observable from './Observable.js';
+import handlePopup from './handle-popup.js';
 
 let model: Analyzer;
 
-type CountsObject<T> = { [S in 'negative' | 'positive']: { [C in 'totalReach' | 'totalTweets']: T } }
+export type CountsObject<T> = { [S in 'negative' | 'positive']: { [C in 'totalReach' | 'totalTweets']: T } }
 let classificationMap: Record<string, boolean>;
 let counts: CountsObject<Observable<number>>;
 
@@ -91,8 +92,15 @@ const initialize = async ({
   model = await Analyzer.load();
 
   chrome.runtime.onConnect.addListener((port) => {
-    console.log('got connection');
-    port.onMessage.addListener(onMessage(port));
+    console.log('got connection from', port.name);
+    switch (port.name) {
+      case 'popup':
+        return handlePopup(counts, port);
+      case 'inject':
+        return port.onMessage.addListener(onMessage(port));
+      default:
+        return console.error('got unexpected connection request');
+    }
   });
 };
 

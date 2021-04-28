@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <script type="module" src="../dist/popup.js"></script>
+    <script lang="js">
+      globalThis.test = 'hello world'
+    </script>
+    <style>
+      html {
+        height: 100px;
+        width: 300px;
+      }
+
+      body {
+        display: flex;
+        flex-direction: row;
+        margin: 0;
+        height: 100%;
+        border: 1px solid blue;
+      }
+
+      .stat {
+        display: flex;
+        flex: auto;
+        flex-direction: column;
+        border: 1px solid red;
+      }
+
+      .content {
+        display: flex;
+        flex: auto;
+        align-self: center;
+        padding-top: 10px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id='unique'></div>
+    <div class="stat">
+      <div class="content">
+        Average
+      </div>
+      <div id='average-sentiment' class="content">
+        test
+      </div>
+    </div>
+    <div class="stat">
+      <div id='positive-total' class="content">
+        test
+      </div>
+      <div id='negative-total' class="content">
+        test
+      </div>
+    </div>
+    <div class="stat">
+      <div id='positive-reach-average' class="content">
+        test
+      </div>
+      <div id='negative-reach-average' class="content">
+        test
+      </div>
+    </div>
+  </body>
+</html>
