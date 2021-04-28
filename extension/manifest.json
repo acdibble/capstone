@@ -6,6 +6,7 @@
     "activeTab",
     "storage"
   ],
+  "browser_action": {},
   "background": {
     "page": "src/background.html"
   },

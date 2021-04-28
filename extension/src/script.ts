@@ -50,7 +50,7 @@ const filterTweets = async (tweetsObject: Record<string, Twitter.Tweet> | undefi
   let filtered = false;
   for (const { id, result } of await getClassifications(tweets)) {
     if (result) {
-      delete tweetsObject[id as string];
+      delete tweetsObject[id];
       filtered = true;
     }
   }
