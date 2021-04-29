@@ -29,7 +29,6 @@ const getClassifications = async (tweets: Analyzer.Input[]): Promise<Analyzer.Re
 
 /* eslint-disable no-param-reassign */
 const filterTweets = async (tweetsObject: Record<string, Twitter.Tweet> | undefined): Promise<boolean> => {
-  // console.log(await new Promise((resolve) => chrome.runtime.sendMessage({ message: 'ping' }, resolve)));
   if (!tweetsObject) return false;
   const tweetIds = Object.keys(tweetsObject);
   if (tweetIds.length === 0) return false;

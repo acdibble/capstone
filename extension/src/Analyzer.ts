@@ -10,12 +10,13 @@ export default class Analyzer {
   static async load(): Promise<Analyzer> {
     const vocabulary = (await this.getVocabulary());
     const model = await tf.loadGraphModel('../assets/model.json');
-    return new Analyzer(model, vocabulary);
+    return new Analyzer(model, vocabulary, -1);
   }
 
   private constructor(
     private readonly model: GraphModel,
     private readonly dict: Record<string, number>,
+    private readonly threshold = 0,
   ) {}
 
   private encode(sentences: string[]): number[][] {
@@ -30,7 +31,7 @@ export default class Analyzer {
       encoded = tf.tensor2d(this.encode(tweets.map((t) => t.text)));
       result = await this.model.executeAsync(encoded) as Tensor2D;
       const data = await result.data() as Float32Array;
-      return tweets.map(({ id }, i) => ({ id, result: data[i] < 0 }));
+      return tweets.map(({ id }, i) => ({ id, result: data[i] < this.threshold }));
     } catch (error) {
       console.error(error);
     } finally {

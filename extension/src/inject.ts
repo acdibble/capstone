@@ -7,13 +7,9 @@ document.documentElement.appendChild(s);
 const port = chrome.runtime.connect(chrome.runtime.id, { name: 'inject' });
 
 port.onMessage.addListener((message: unknown) => {
-  console.log('forwarding message back to web page', message);
   s.dispatchEvent(new CustomEvent('classified', { detail: message }));
 });
 
 s.addEventListener('classify', ((message: CustomEvent) => {
-  console.log('forwarding message to port', message);
   port.postMessage(message.detail);
 }) as EventListener);
-
-export {};

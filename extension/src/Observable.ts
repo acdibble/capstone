@@ -13,11 +13,11 @@ export default class Observable<T> {
     return this.#value;
   }
 
-  watch(cb: Callback<T>): () => void {
+  watch(cb: Callback<T>, callImmediately = true): () => void {
     // eslint-disable-next-line symbol-description
     const id = Symbol();
     this.callbacks.set(id, cb);
-    cb.call(this, this.value);
+    if (callImmediately) cb.call(this, this.value);
     return () => this.unwatch(id);
   }
 

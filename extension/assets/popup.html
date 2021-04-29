@@ -3,13 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <script type="module" src="../dist/popup.js"></script>
-    <script lang="js">
-      globalThis.test = 'hello world'
-    </script>
     <style>
       html {
         height: 100px;
-        width: 300px;
+        width: 600px;
       }
 
       body {
@@ -17,14 +14,12 @@
         flex-direction: row;
         margin: 0;
         height: 100%;
-        border: 1px solid blue;
       }
 
       .stat {
         display: flex;
         flex: auto;
         flex-direction: column;
-        border: 1px solid red;
       }
 
       .content {
@@ -37,7 +32,7 @@
   </head>
 
   <body>
-    <div id='unique'></div>
+    <button id='reset-button'>Reset</button>
     <div class="stat">
       <div class="content">
         Average
