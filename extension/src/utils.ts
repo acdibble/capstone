@@ -8,8 +8,6 @@ export const values = Object.values as <T>(obj: T) => T[keyof T][];
 
 export function* iterateCountsObject<T>(counts: CountsObject<T>): Iterable<T> {
   for (const obj of values(counts)) {
-    for (const value of values(obj)) {
-      yield value;
-    }
+    yield* values(obj);
   }
 }

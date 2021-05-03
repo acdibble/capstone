@@ -13,16 +13,12 @@ export default class Observable<T> {
     return this.#value;
   }
 
-  watch(cb: Callback<T>, callImmediately = true): () => void {
+  onChange(cb: Callback<T>, callImmediately = true): () => void {
     // eslint-disable-next-line symbol-description
     const id = Symbol();
     this.callbacks.set(id, cb);
     if (callImmediately) cb.call(this, this.value);
-    return () => this.unwatch(id);
-  }
-
-  private unwatch(id: symbol): void {
-    this.callbacks.delete(id);
+    return () => this.callbacks.delete(id);
   }
 
   update(callback: (value: T) => T): void

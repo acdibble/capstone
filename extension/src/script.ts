@@ -10,7 +10,7 @@ interface IncomingMessage {
 let messageId = 1;
 type Resolver = (payload: Analyzer.Result[]) => void
 const callbackMap: Record<number, Resolver> = {};
-const scriptTag = document.getElementById('extension-script-tag')!;
+const scriptTag = document.getElementById('extension-script-tag') as HTMLElement;
 
 scriptTag.addEventListener('classified', (({ detail }: CustomEvent<IncomingMessage>): void => {
   try {

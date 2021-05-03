@@ -30,11 +30,6 @@ const hydrateCounts = (pastCounts: CountsObject<number>): CountsObject<Observabl
     return acc;
   }, {} as CountsObject<Observable<number>>);
 
-const updateBadgeText = (amount: number): void => {
-  const badgeText = amount > 1000 ? '999+' : amount.toString();
-  chrome.browserAction.setBadgeText({ text: badgeText });
-};
-
 interface ClassifyResult {
   classifiedTweets: Analyzer.Result[];
   alreadyClassifiedTweets: Analyzer.Result[];
@@ -68,18 +63,21 @@ const updateStore = (): void => {
   }, 500);
 };
 
-const onMessage = (port: chrome.runtime.Port) => async ({ id, tweets }: { id: number; tweets: Analyzer.Input[] }) => {
-  const { classifiedTweets, alreadyClassifiedTweets, tweetsToClassify } = await classify(tweets);
-  port.postMessage({ id, classifications: classifiedTweets.concat(alreadyClassifiedTweets) });
+const handleInject = (port: chrome.runtime.Port, tfPromise: Promise<void>): void => {
+  port.onMessage.addListener(async ({ id, tweets }: { id: number; tweets: Analyzer.Input[] }) => {
+    await tfPromise;
+    const { classifiedTweets, alreadyClassifiedTweets, tweetsToClassify } = await classify(tweets);
+    port.postMessage({ id, classifications: classifiedTweets.concat(alreadyClassifiedTweets) });
 
-  for (let i = 0; i < classifiedTweets.length; i++) {
-    const { id: tweetId, totalReach } = tweetsToClassify[i];
-    const { result } = classifiedTweets[i];
-    classificationMap.update((cache) => cache.set(tweetId, result));
-    const label = result ? 'negative' : 'positive';
-    counts[label].totalReach.update((current) => current + totalReach);
-    counts[label].totalTweets.update((current) => current + 1);
-  }
+    for (let i = 0; i < classifiedTweets.length; i++) {
+      const { id: tweetId, totalReach } = tweetsToClassify[i];
+      const { result } = classifiedTweets[i];
+      classificationMap.update((cache) => cache.set(tweetId, result));
+      const label = result ? 'negative' : 'positive';
+      counts[label].totalReach.update((current) => current + totalReach);
+      counts[label].totalTweets.update((current) => current + 1);
+    }
+  });
 };
 
 interface Store {
@@ -87,30 +85,37 @@ interface Store {
   counts?: CountsObject<number>;
 }
 
-const initialize = async ({
-  counts: pastCounts = { positive: { totalReach: 0, totalTweets: 0 }, negative: { totalReach: 0, totalTweets: 0 } },
-  classifications,
-}: Store = {}): Promise<void> => {
-  console.log(classifications);
-  classificationMap = new Observable(new Cache(classifications));
-  classificationMap.watch(updateStore, false);
-
-  counts = hydrateCounts(pastCounts);
-  counts.negative.totalTweets.watch(updateBadgeText);
-
-  for (const obs of iterateCountsObject(counts)) {
-    obs.watch(updateStore, false);
-  }
-
+const initTensorFlow = async (): Promise<void> => {
   await tf.setBackend('webgl');
   model = await Analyzer.load();
+};
+
+const initialize = ({
+  counts: pastCounts = { positive: { totalReach: 0, totalTweets: 0 }, negative: { totalReach: 0, totalTweets: 0 } },
+  classifications,
+}: Store = {}): void => {
+  const tfPromise = initTensorFlow();
+
+  console.log(classifications);
+  classificationMap = new Observable(new Cache(classifications));
+  classificationMap.onChange(updateStore, false);
+
+  counts = hydrateCounts(pastCounts);
+
+  counts.negative.totalTweets.onChange((amount: number): void => {
+    chrome.browserAction.setBadgeText({ text: amount > 1000 ? '999+' : amount.toString() });
+  });
+
+  for (const obs of iterateCountsObject(counts)) {
+    obs.onChange(updateStore, false);
+  }
 
   chrome.runtime.onConnect.addListener((port) => {
     switch (port.name) {
       case 'popup':
         return handlePopup(counts, port, classificationMap);
       case 'inject':
-        return port.onMessage.addListener(onMessage(port));
+        return handleInject(port, tfPromise);
       default:
         return console.error('got unexpected connection request');
     }

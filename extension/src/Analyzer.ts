@@ -20,7 +20,8 @@ export default class Analyzer {
   ) {}
 
   private encode(sentences: string[]): number[][] {
-    return sentences.map((sentence) => sentence.split(/\s+/).map((word) => this.dict[word] ?? this.dict['[UNK]']));
+    const unk = this.dict['[UNK]'];
+    return sentences.map((sentence) => sentence.split(/\s+/).map((word) => this.dict[word] ?? unk));
   }
 
   async classify(tweets: Analyzer.Input[]): Promise<Analyzer.Result[]> {

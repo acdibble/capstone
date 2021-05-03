@@ -71,8 +71,8 @@ const handlePopup = (counts: Counts, port: chrome.runtime.Port, classificationMa
 
   const [{ document }] = chrome.extension.getViews({ type: 'popup' });
 
-  [negativeTotal, positiveTotal].forEach((obs) => {
-    const unsubscribe = obs.watch(function (this: Observable<number>) {
+  callbacks.push(...[negativeTotal, positiveTotal]
+    .map((obs) => obs.onChange(function (this: Observable<number>) {
       // handle average
       updateAverageSentiment(document, negativeTotal.value, positiveTotal.value);
       // handle total per category
@@ -83,20 +83,15 @@ const handlePopup = (counts: Counts, port: chrome.runtime.Port, classificationMa
         updateTotal(document, 'positive', this.value);
         updateAverageReach(document, 'positive', this.value, positiveReach.value);
       }
-    });
-    callbacks.push(unsubscribe);
-  });
+    })));
 
-  [positiveReach, negativeReach].forEach((obs) => {
-    const unsubscribe = obs.watch(function (this: Observable<number>) {
-      if (this === positiveReach) {
-        updateAverageReach(document, 'positive', positiveTotal.value, this.value);
-      } else {
-        updateAverageReach(document, 'negative', negativeTotal.value, this.value);
-      }
-    });
-    callbacks.push(unsubscribe);
-  });
+  callbacks.push(...[positiveReach, negativeReach].map((obs) => obs.onChange(function (this: Observable<number>) {
+    if (this === positiveReach) {
+      updateAverageReach(document, 'positive', positiveTotal.value, this.value);
+    } else {
+      updateAverageReach(document, 'negative', negativeTotal.value, this.value);
+    }
+  })));
 };
 
 export default handlePopup;
