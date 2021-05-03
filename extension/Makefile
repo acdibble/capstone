@@ -7,5 +7,5 @@ clean:
 fresh: clean build
 
 bundle: build
-	rm extension.zip
+	rm extension.zip &> /dev/null || true
 	zip -r extension.zip assets dist manifest.json
