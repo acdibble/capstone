@@ -5,8 +5,7 @@
 
 1. Be viewing this document in Chrome web browser
 2. Go to [releases](https://github.com/acdibble/capstone/releases/)
-3. Download
-[extension.zip](https://github.com/acdibble/capstone/releases/download/v1.0.0/extension.zip)
+3. Download extension.zip
 ![](assets/2021-05-03-21-27-31.png)
 3. Unzip file in your directory of choice
 4. Navigate to [`chrome://extensions`](chrome://extensions)
