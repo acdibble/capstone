@@ -115,23 +115,18 @@ const filterTweets = async (tweetsObject: Record<string, Twitter.Tweet> | undefi
 const filterGraphQLResponse = async (responseBody: Record<string, any>): Promise<boolean> => {
   const instructions = responseBody.data?.user?.result?.timeline?.timeline?.instructions;
   if (!instructions) return false;
-  console.log('instructions:', instructions);
   const { tweets, tweetPaths } = traverse(instructions);
   const filtered = await filterTweets(tweets);
-  console.log(filtered);
   if (!filtered) return false;
   for (const [tweetId, parts] of Object.entries(tweetPaths)) {
     // eslint-disable-next-line no-continue
     if (tweetId in tweets) continue;
-    console.log('tweetId', tweetId);
     const path = [];
     let numberFound = false;
     for (let i = parts.length - 1; i >= 0; i--) {
       if (!numberFound && typeof parts[i] === 'number') numberFound = true;
       if (numberFound) path.push(parts[i]);
     }
-    console.log('path', path);
-
     let obj = instructions;
     while (path.length > 1) {
       obj = obj[path.pop()!];
