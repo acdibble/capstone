@@ -96,7 +96,6 @@ const initialize = ({
 }: Store = {}): void => {
   const tfPromise = initTensorFlow();
 
-  console.log(classifications);
   classificationMap = new Observable(new Cache(classifications));
   classificationMap.onChange(updateStore, false);
 

@@ -133,7 +133,6 @@ const filterGraphQLResponse = async (responseBody: Record<string, any>): Promise
     }
     delete obj[path[0]];
   }
-  console.log('instructions:', instructions);
   return true;
 };
 /* eslint-enable @typescript-eslint/no-unsafe-member-access */
@@ -153,7 +152,6 @@ const createCallback = (opts: CreateCallbackOpts) => async function (this: XMLHt
       let filtered: boolean;
 
       if (/graphql\/[\w\d]+\/UserTweets/.test(this.responseURL)) {
-        console.log(responseBody);
         filtered = await filterGraphQLResponse(responseBody);
       } else {
         filtered = await filterTweets(responseBody?.globalObjects?.tweets);
