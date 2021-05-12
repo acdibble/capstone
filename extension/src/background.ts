@@ -14,7 +14,7 @@ const serializeCounts = (): CountsObject<number> => counts && entries(counts)
   .reduce((acc, [label, totals]) => {
     acc[label] = entries(totals).reduce((acc2, [total, observable]) => {
       // eslint-disable-next-line no-param-reassign
-      acc2[total] = observable.value;
+      acc2[total] = observable.peek();
       return acc2;
     }, {} as CountsObject<number>['positive' | 'negative']);
     return acc;
@@ -40,7 +40,7 @@ const classify = async (tweets: Analyzer.Input[]): Promise<ClassifyResult> => {
   const tweetsToClassify: Analyzer.Input[] = [];
   const alreadyClassifiedTweets: Analyzer.Result[] = [];
   for (const tweet of tweets) {
-    const result = classificationMap.value.get(tweet.id);
+    const result = classificationMap.peek().get(tweet.id);
     if (result !== undefined) {
       alreadyClassifiedTweets.push({ id: tweet.id, result });
     } else {
@@ -57,7 +57,7 @@ const updateStore = (): void => {
   timeout = setTimeout(() => {
     timeout = undefined;
     chrome.storage.local.set({
-      classifications: classificationMap.value.toJSON(),
+      classifications: classificationMap.peek().toJSON(),
       counts: serializeCounts(),
     });
   }, 500);

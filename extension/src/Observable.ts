@@ -9,7 +9,7 @@ export default class Observable<T> {
     this.#value = value;
   }
 
-  get value(): T {
+  peek(): T {
     return this.#value;
   }
 
@@ -17,7 +17,7 @@ export default class Observable<T> {
     // eslint-disable-next-line symbol-description
     const id = Symbol();
     this.callbacks.set(id, cb);
-    if (callImmediately) cb.call(this, this.value);
+    if (callImmediately) cb.call(this, this.#value);
     return () => this.callbacks.delete(id);
   }
 
@@ -26,7 +26,7 @@ export default class Observable<T> {
   update(arg0: T | ((value: T) => T)): void {
     if (typeof arg0 === 'function') {
       this.#value = (arg0 as (value: T) => T)(this.#value);
-    } else if (typeof arg0 === typeof this.value) {
+    } else if (typeof arg0 === typeof this.#value) {
       this.#value = arg0;
     } else {
       throw new TypeError();

@@ -74,22 +74,22 @@ const handlePopup = (counts: Counts, port: chrome.runtime.Port, classificationMa
   callbacks.push(...[negativeTotal, positiveTotal]
     .map((obs) => obs.onChange(function (this: Observable<number>) {
       // handle average
-      updateAverageSentiment(document, negativeTotal.value, positiveTotal.value);
+      updateAverageSentiment(document, negativeTotal.peek(), positiveTotal.peek());
       // handle total per category
       if (this === negativeTotal) {
-        updateTotal(document, 'negative', this.value);
-        updateAverageReach(document, 'negative', this.value, negativeReach.value);
+        updateTotal(document, 'negative', this.peek());
+        updateAverageReach(document, 'negative', this.peek(), negativeReach.peek());
       } else {
-        updateTotal(document, 'positive', this.value);
-        updateAverageReach(document, 'positive', this.value, positiveReach.value);
+        updateTotal(document, 'positive', this.peek());
+        updateAverageReach(document, 'positive', this.peek(), positiveReach.peek());
       }
     })));
 
   callbacks.push(...[positiveReach, negativeReach].map((obs) => obs.onChange(function (this: Observable<number>) {
     if (this === positiveReach) {
-      updateAverageReach(document, 'positive', positiveTotal.value, this.value);
+      updateAverageReach(document, 'positive', positiveTotal.peek(), this.peek());
     } else {
-      updateAverageReach(document, 'negative', negativeTotal.value, this.value);
+      updateAverageReach(document, 'negative', negativeTotal.peek(), this.peek());
     }
   })));
 };
