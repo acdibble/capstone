@@ -83,7 +83,6 @@ const filterTweets = async (tweetsObject: Record<string, Twitter.Tweet> | undefi
   if (!tweetsObject) return false;
   const tweetIds = Object.keys(tweetsObject);
   if (tweetIds.length === 0) return false;
-  console.time('classification');
   const tweets: Analyzer.Input[] = tweetIds.map((id) => {
     const {
       full_text: text,
@@ -157,7 +156,6 @@ const createCallback = (opts: CreateCallbackOpts) => async function (this: XMLHt
         filtered = await filterTweets(responseBody?.globalObjects?.tweets);
       }
       if (filtered) {
-        console.timeEnd('classification');
         Object.defineProperty(this, 'responseText', {
           get() {
             return JSON.stringify(responseBody);
