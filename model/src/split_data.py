@@ -25,7 +25,7 @@ for sentiment in counts.keys():
     os.mkdir(data_dir / sentiment)
 
 
-with open(assets_dir / 'big.csv') as csv_file:
+with open(assets_dir / 'dataset.csv') as csv_file:
     for row in csv.DictReader(csv_file):
         sentiment = mapping[row['sentiment']]
         count = counts[sentiment]
