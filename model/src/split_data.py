@@ -30,9 +30,6 @@ with open(assets_dir / 'big.csv') as csv_file:
         sentiment = mapping[row['sentiment']]
         count = counts[sentiment]
 
-        if counts[sentiment] >= 20000:
-            continue
-
         text = f'''"{re.sub('"', '""', row['text'].strip())}"'''
         with open(data_dir / sentiment / f'{count}.txt',  'w') as out_file:
             out_file.write(text)
