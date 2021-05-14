@@ -1,27 +1,24 @@
 import json
 import pathlib
-import os
 import random
 
 import tensorflow as tf
 import tensorflowjs as tfjs
 
-model_dir = pathlib.Path(os.getcwd()) / 'model'
+model_dir = pathlib.Path(__file__).absolute().parent.parent
 dataset_dir = model_dir / 'data'
-
-train_dir = dataset_dir / 'big'
 
 batch_size = 64
 seed = random.randint(0, 100)
 
 train_dataset = tf.keras.preprocessing.text_dataset_from_directory(
-    train_dir,
+    dataset_dir,
     validation_split=0.2,
     batch_size=batch_size,
     subset='training',
     seed=seed)
 validation_dataset = tf.keras.preprocessing.text_dataset_from_directory(
-    train_dir,
+    dataset_dir,
     validation_split=0.2,
     batch_size=batch_size,
     subset='validation',
@@ -64,11 +61,12 @@ history = model.fit(encoded_train_dataset, epochs=10, validation_steps=30)
 
 test_loss, test_acc = model.evaluate(encoded_validation_dataset)
 
+
 print('Test Loss:', test_loss)
 print('Test Accuracy:', test_acc)
 
 assets_dir = model_dir / 'assets'
-model_path = assets_dir / 'trained_model_big_2'
+model_path = assets_dir / 'trained_model'
 model.save(model_path)
 
 with open(str(assets_dir / 'vocab.json'), 'w') as vocab_file:
@@ -82,4 +80,4 @@ with open(str(assets_dir / 'vocab.json'), 'w') as vocab_file:
     json.dump(word_map, vocab_file)
 
 tfjs.converters.convert_tf_saved_model(
-    str(model_path), str(assets_dir / 'trained_model_big_2_converted'))
+    str(model_path), str(assets_dir / 'trained_model_converted'))

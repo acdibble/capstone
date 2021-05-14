@@ -4,16 +4,9 @@ import pathlib
 import re
 import shutil
 
-model_path = pathlib.Path(__file__).parent.parent.absolute()
+model_path = pathlib.Path(__file__).absolute().parent.parent
 assets_dir = model_path / 'assets'
 data_dir = model_path / 'data'
-
-
-def mkdir(path):
-    try:
-        os.mkdir(path)
-    except FileExistsError:
-        pass
 
 
 try:
@@ -21,31 +14,27 @@ try:
 except FileNotFoundError:
     pass
 
-mkdir(data_dir)
+os.mkdir(data_dir)
 
-mapping = {
-    '0': 'negative',
-    '4': 'positive',
-}
+mapping = {'0': 'negative', '4': 'positive'}
 
-for filename in ['big']:
-    counts = {
-        'negative': 0,
-        'positive': 0,
-    }
+counts = {'negative': 0, 'positive': 0}
 
-    output_dir = data_dir / filename
-    mkdir(output_dir)
 
-    for sentiment in counts.keys():
-        mkdir(output_dir / sentiment)
+for sentiment in counts.keys():
+    os.mkdir(data_dir / sentiment)
 
-    with open(assets_dir / f'{filename}.csv') as csv_file:
-        for row in csv.DictReader(csv_file):
-            sentiment = mapping[row['sentiment']]
-            count = counts[sentiment]
-            text = f'''"{re.sub('"', '""', row['text'].strip())}"'''
-            with open(output_dir / sentiment / f'{count}.txt',  'w') as out_file:
-                out_file.write(text)
 
-            counts[sentiment] += 1
+with open(assets_dir / 'big.csv') as csv_file:
+    for row in csv.DictReader(csv_file):
+        sentiment = mapping[row['sentiment']]
+        count = counts[sentiment]
+
+        if counts[sentiment] >= 20000:
+            continue
+
+        text = f'''"{re.sub('"', '""', row['text'].strip())}"'''
+        with open(data_dir / sentiment / f'{count}.txt',  'w') as out_file:
+            out_file.write(text)
+
+        counts[sentiment] += 1
